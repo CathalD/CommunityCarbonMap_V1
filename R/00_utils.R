@@ -3,8 +3,9 @@
 # packages directly rather than a custom wrapper.
 # =============================================================================
 
-#' Locate the mvp/ directory regardless of the caller's working directory.
-find_mvp_root <- function() {
+#' Locate the project root -- the directory holding config.R -- regardless of
+#' the caller's working directory.
+find_project_root <- function() {
   a <- commandArgs(trailingOnly = FALSE)
   f <- sub("^--file=", "", a[grepl("^--file=", a)])
   d <- if (length(f)) dirname(f[[1]]) else getwd()
@@ -15,8 +16,8 @@ find_mvp_root <- function() {
     if (identical(parent, d)) break
     d <- parent
   }
-  stop("Could not find mvp/config.R walking up from '", getwd(), "'. ",
-       "Run scripts from inside the mvp/ directory or its R/ subfolder.",
+  stop("Could not find config.R walking up from '", getwd(), "'. ",
+       "Run scripts from inside the project root or its R/ subfolder.",
        call. = FALSE)
 }
 

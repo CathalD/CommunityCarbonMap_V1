@@ -4,9 +4,8 @@ A simplified, 7-step version of the full workflow one level up in this repo
 (`../scripts/`, `../R/`, untouched). Same scientific backbone -- cores →
 carbon stocks → satellite-covariate model → landscape prediction → Bayesian
 fusion with a published prior -- built from mature R packages instead of
-~10,800 lines of custom research-grade code. See
-`.claude/brainstorm-mvp.md` in the repo root for the full design rationale
-if you want it; this README is just "how do I run it."
+~10,800 lines of custom research-grade code. This README is "how do I run it"; the reasoning behind each
+simplification is in the header comment of the step that implements it.
 
 **This pipeline is iterative.** The first run fuses a published carbon map
 (Li et al. 2025) with your 8 cores. Every run after that fuses your last
@@ -16,7 +15,7 @@ better each field season without ever being rebuilt from zero. See step 6.
 ## Setup (once)
 
 ```r
-source("mvp/install_packages.R")
+source("install_packages.R")
 ```
 
 Then, for step 02 only, set up Earth Engine once interactively:
@@ -34,42 +33,31 @@ rgee::ee_Initialize(project = "your-gcp-project-id")
 Run each step **one at a time**, from the repo root, and check its printed
 output before moving on:
 
-```bash
-Rscript mvp/R/01_clean_and_stocks.R
-Rscript mvp/R/01b_plot_profiles.R      # two carbon-depth profile PNGs
-Rscript mvp/R/02_covariates.R          # needs Earth Engine auth, takes longest
-Rscript mvp/R/03_training_data.R
-Rscript mvp/R/04_train_model.R
-Rscript mvp/R/05_predict_and_compare.R
-Rscript mvp/R/06_bayesian_update.R
-Rscript mvp/R/07_version_and_export.R
+```r
+setwd("~/path/to/CommunityCarbonMap_V1")
+source("run_all.R")     # defines run_steps(); runs nothing yet
+
+run_steps()             # everything, 01 -> 13
+run_steps("01")         # one step
+run_steps("06:13")      # a range
+run_steps(gee = FALSE)  # skip the Earth Engine steps
 ```
 
 ## The study area
 
-`mvp/data/aoi.geojson` is the coast-following polygon that defines the mapped
+`data/aoi.geojson` is the coast-following polygon that defines the mapped
 extent (~5,400 km²). Step 02 uses it if present and only falls back to a
 buffered hull around the cores if it's missing, so **edit that file to change
 the mapping extent** — no code change needed. Step 02 stops with an error if
 any core falls outside it, since a core outside the AOI silently loses all its
 covariates.
 
-Then the external-comparison add-on:
-
-```bash
-Rscript mvp/R/08_external_ingest.R       # no GEE needed
-Rscript mvp/R/09_external_ecosystem.R    # needs GEE, ~11,500 points, chunked
-Rscript mvp/R/10_comparison_outputs.R    # comparison figures + GeoPackage
-Rscript mvp/R/11_context_figures.R       # the six side-by-side figures
-Rscript mvp/R/12_community_story.R       # contribution figure + COMMUNITY_BRIEF.md
-```
-
-Once you trust the whole chain, `Rscript mvp/run_all.R` runs everything in
+Once you trust the whole chain, `Rscript run_all.R` runs everything in
 order.
 
-Every step reads from and writes to `mvp/outputs/current/` — that folder is
+Every step reads from and writes to `outputs/current/` — that folder is
 always "the latest state." Step 7 archives a full copy of it into
-`mvp/outputs/versions/carbon_map_v1/` (then `v2/`, `v3/`, ...) with a
+`outputs/versions/carbon_map_v1/` (then `v2/`, `v3/`, ...) with a
 `metadata.csv` describing what changed.
 
 ## What to check at each step
@@ -176,8 +164,7 @@ every number computed in the run that wrote it.
 
 ## Known simplifications (intentional, for this first pass)
 
-These are all documented as deliberate MVP trade-offs in the design report
-(`.claude/brainstorm-mvp.md`), not oversights:
+These are deliberate trade-offs, not oversights:
 
 - **One depth window** (however deep each core actually reached), not the
   original's dual common-support/reference-window system. Cores under
@@ -217,7 +204,7 @@ a trap waiting to spring. Restart R before a run.
 Each script's header comment lists its `INPUT`/`OUTPUT` files. Almost every
 failure will be one of:
 
-- A missing package → rerun `mvp/install_packages.R`.
+- A missing package → rerun `install_packages.R`.
 - A missing input file → the previous step didn't finish or didn't write
   where this step expects. Check `outputs/current/` for what's actually
   there.

@@ -6,28 +6,39 @@
 # change, it belongs here instead.
 #
 # Every step script sources R/00_utils.R THEN this file, in that order --
-# find_mvp_root() must already be in scope when this file runs.
+# find_project_root() must already be in scope when this file runs.
+#
+# LAYOUT. Everything is relative to the repository root, which is where this
+# file lives. In the previous repository the pipeline sat in an `mvp/`
+# subdirectory and reached UP one level for its raw inputs; here there is no
+# parent to reach into, so every path below starts at the root and the raw
+# inputs live inside the repo.
+#
+#   config.R  run_all.R  install_packages.R
+#   R/                   the pipeline, steps 01-13
+#   data/raw/            the field data
+#   data/npdb/           AAFC National Pedon Database, pre-QC'd
+#   data/                external comparison datasets + boundaries
+#   outputs/current/     the live working state, overwritten each run
+#   outputs/versions/    carbon_map_vN/ snapshots, one per run of step 07
 # =============================================================================
 
-.mvp_root <- find_mvp_root()
+.proj_root <- find_project_root()
 
 CFG <- list(
 
   # ---- paths --------------------------------------------------------------
-  root        = .mvp_root,
-  repo_root   = dirname(.mvp_root),
-  # Reuses the same raw core CSV as the original workflow -- one source of
-  # truth for the field data, not a copy.
-  file_cores_raw = file.path(dirname(.mvp_root), "data", "raw",
+  root        = .proj_root,
+  file_cores_raw = file.path(.proj_root, "data", "raw",
                              "community_soil_cores.csv"),
   # Hand-drawn, coast-following study area. Preferred over a computed buffer
   # around the cores: it follows the shoreline trend instead of spending most
   # of its area over open water. Step 02 uses this if present and falls back
   # to a buffered convex hull of the cores if it is missing.
-  file_aoi = file.path(.mvp_root, "data", "aoi.geojson"),
-  dir_current = file.path(.mvp_root, "outputs", "current"),
-  dir_versions = file.path(.mvp_root, "outputs", "versions"),
-  dir_figures = file.path(.mvp_root, "outputs", "current", "figures"),
+  file_aoi = file.path(.proj_root, "data", "aoi.geojson"),
+  dir_current = file.path(.proj_root, "outputs", "current"),
+  dir_versions = file.path(.proj_root, "outputs", "versions"),
+  dir_figures = file.path(.proj_root, "outputs", "current", "figures"),
 
   # ---- hexagon reporting scales (step 07) -----------------------------------
   # Three sizes sitting between the posterior raster grid (gee$scale_m, 100 m)
@@ -48,31 +59,29 @@ CFG <- list(
     # Regional boundary for the comparison statistics. Matches the extent of
     # Li et al. 2025 but clips by REGION rather than by peat presence, so
     # mineral ground inside the lowlands counts -- which is the whole point.
-    file_hbl = file.path(.mvp_root, "data", "hbl_boundary.geojson"),
+    file_hbl = file.path(.proj_root, "data", "hbl_boundary.geojson"),
 
     # CanPeat. Raw layer table; profiles are derived from it here rather than
     # read from a pre-summarised file, so every dataset's profile totals are
     # integrated the same way.
-    file_canpeat_layers = file.path(.mvp_root, "data", "peat_layers.csv"),
+    file_canpeat_layers = file.path(.proj_root, "data", "peat_layers.csv"),
 
     # Janousek: US Pacific and Gulf coast tidal wetlands. Already harmonised.
-    file_janousek_layers = file.path(.mvp_root, "data", "janousek_layers.csv"),
+    file_janousek_layers = file.path(.proj_root, "data", "janousek_layers.csv"),
 
     # WOSIS. CANADA SUBSET ONLY -- 29 profiles, 124 layers, and that is all the
     # WOSIS data available here. The 14,596-profile global table in
     # combined_profiles.csv is deliberately NOT used: it is 92% United States
     # and would swamp every comparison with irrelevant geography.
-    file_wosis_layers   = file.path(.mvp_root, "data", "wosis_layers_canada.csv"),
-    file_wosis_profiles = file.path(.mvp_root, "data", "wosis_profiles_canada.csv"),
+    file_wosis_layers   = file.path(.proj_root, "data", "wosis_layers_canada.csv"),
+    file_wosis_profiles = file.path(.proj_root, "data", "wosis_profiles_canada.csv"),
 
     # AAFC National Pedon Database, already QC'd by the original workflow.
     # The one source with a mineral/organic flag and a standardised 0-30 cm
     # stock, so it carries most of the mineral-soil comparison.
-    file_npdb_layers   = file.path(dirname(.mvp_root), "data", "raw",
-                                   "National Pedon Database", "outputs_npdb",
+    file_npdb_layers   = file.path(.proj_root, "data", "npdb",
                                    "npdb_carbon_samples.csv"),
-    file_npdb_profiles = file.path(dirname(.mvp_root), "data", "raw",
-                                   "National Pedon Database", "outputs_npdb",
+    file_npdb_profiles = file.path(.proj_root, "data", "npdb",
                                    "npdb_carbon_cores.csv"),
 
     # Organic-soil threshold, % organic carbon in the surface layer. Used only
@@ -119,7 +128,7 @@ CFG <- list(
 
     # Published Canada-wide figures. NOT computed here -- fill this file in from
     # the literature. Rows left blank are skipped rather than guessed at.
-    file_literature = file.path(.mvp_root, "data", "literature_values.csv")
+    file_literature = file.path(.proj_root, "data", "literature_values.csv")
   ),
 
   seed = 20260727L,

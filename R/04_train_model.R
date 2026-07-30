@@ -16,11 +16,11 @@
 # REQUIRES: ranger, rsample, yardstick, dplyr, purrr, tibble
 # =============================================================================
 
-.this_dir <- Sys.getenv("MVP_R_DIR", "")
+.this_dir <- Sys.getenv("CCM_R_DIR", "")
 if (!nzchar(.this_dir)) {
   # Works three ways: Rscript (finds --file=), source() from ANY working
   # directory (finds the sourced file's own path), and run_all.R (sets
-  # MVP_R_DIR). Only falls back to getwd() if all three fail.
+  # CCM_R_DIR). Only falls back to getwd() if all three fail.
   .f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
   if (!length(.f)) .f <- unlist(lapply(sys.frames(), function(e) e$ofile))
   .this_dir <- if (length(.f)) dirname(normalizePath(.f[[1]])) else getwd()

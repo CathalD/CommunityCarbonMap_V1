@@ -37,7 +37,7 @@
 # REQUIRES: readr, dplyr, sf
 # =============================================================================
 
-.this_dir <- Sys.getenv("MVP_R_DIR", "")
+.this_dir <- Sys.getenv("CCM_R_DIR", "")
 if (!nzchar(.this_dir)) {
   .f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
   if (!length(.f)) .f <- unlist(lapply(sys.frames(), function(e) e$ofile))
